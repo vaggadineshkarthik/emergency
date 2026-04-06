@@ -259,8 +259,16 @@ body {
 }
 
 .log-entry.alert-entry {
-    border-left-color: var(--alert-red);
-    background: rgba(255, 0, 60, 0.05);
+    background: rgba(255, 0, 60, 0.2);
+    border-left: 4px solid var(--alert-red);
+    color: #ffb3c1;
+}
+
+.log-entry.debug-entry {
+    background: rgba(0, 243, 255, 0.05);
+    border-left: 4px solid var(--neon-blue);
+    color: var(--text-muted);
+    font-size: 0.85rem;
 }
 
 .timestamp {

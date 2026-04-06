@@ -24,19 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Add Log Entry
-        const li = document.createElement('li');
-        li.className = 'log-entry alert-entry';
-        li.innerHTML = `
-            <span class="timestamp">${timestamp}</span>
-            <span class="entry-msg">${message}</span>
-        `;
-        // Prepend to show newest at top
-        logList.insertBefore(li, logList.firstChild);
-
-        // Limit log entries to last 50
-        if (logList.children.length > 50) {
-            logList.removeChild(logList.lastChild);
-        }
+        addLogEntry(timestamp, message, 'alert-entry');
 
         // Auto-disable emergency mode after 8 seconds of no detections
         // Each lane can have its own independent timer now
@@ -49,20 +37,35 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 8000);
     }
 
-    // Connect to FastAPI WebSocket
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    console.log("Connecting to WebSocket:", wsUrl);
-    const ws = new WebSocket(wsUrl);
+    function addLogEntry(timestamp, message, className = 'normal-entry') {
+        const li = document.createElement('li');
+        li.className = `log-entry ${className}`;
+        li.innerHTML = `
+            <span class="timestamp">${timestamp}</span>
+            <span class="entry-msg">${message}</span>
+        `;
+        // Prepend to show newest at top
+        logList.insertBefore(li, logList.firstChild);
 
-    ws.onmessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            if (data.type === 'alert' && data.lane) {
-                activateEmergency(data.lane, data.timestamp, data.message);
-            }
-        } catch (e) {
-            console.error("Failed to parse WS message:", e);
+        // Limit log entries to last 50
+        if (logList.children.length > 50) {
+            logList.removeChild(logList.lastChild);
+        }
+    }
+
+    // --- WebSocket Logic ---
+    const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const socket = new WebSocket(`${wsProtocol}//${window.location.host}/ws`);
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const now = new Date().toLocaleTimeString();
+
+        if (data.type === "alert") {
+            activateEmergency(data.lane, data.timestamp || now, data.message);
+        } else if (data.type === "debug") {
+            // Add debug messages to the log list with a special style
+            addLogEntry(now, `[DEBUG] ${data.message}`, 'debug-entry');
         }
     };
 

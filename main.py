@@ -125,6 +125,9 @@ PORT = "4747"
 # To test with a local file, change this to your video file path (e.g., "test.mp4")
 TEST_VIDEO_PATH = None 
 
+# SIMULATION MODE: If True, uses random images from test folder when camera fails
+SIMULATION_MODE = True
+
 # --- Background Task for Individual Lane Monitoring ---
 async def process_lane_camera(lane_id: int, direction: str, url: str = None):
     """
@@ -142,11 +145,17 @@ async def process_lane_camera(lane_id: int, direction: str, url: str = None):
 
     cap = None
     
+    # Simulation variables
+    test_img_dir = os.path.join("Ambulance-Detection-1", "test", "images")
+    test_images = []
+    if SIMULATION_MODE and os.path.exists(test_img_dir):
+        test_images = [os.path.join(test_img_dir, f) for f in os.listdir(test_img_dir) if f.endswith(".jpg")]
+    
     while True:
         await asyncio.sleep(0.01) # Yield
         
         # Connection handling
-        if cap is None or not cap.isOpened():
+        if not SIMULATION_MODE and (cap is None or not cap.isOpened()):
             print(f"[*] Lane {lane_id} ({direction}) attempting connection to {url} ...")
             cap = cv2.VideoCapture(url)
             if cap.isOpened():
@@ -166,14 +175,24 @@ async def process_lane_camera(lane_id: int, direction: str, url: str = None):
                 await asyncio.sleep(5)
                 continue
 
-        # Real frame processing
-        ret, frame = cap.read()
-        if not ret:
-            print(f"[-] Lane {lane_id} ({direction}) connection lost. Reconnecting...")
-            cap.release()
-            cap = None
-            await asyncio.sleep(2)
-            continue
+        # Frame retrieval
+        if SIMULATION_MODE and test_images:
+            import random
+            img_path = random.choice(test_images)
+            frame = cv2.imread(img_path)
+            if frame is None:
+                await asyncio.sleep(1)
+                continue
+            # Simulate a 1-second delay per image
+            await asyncio.sleep(1.0)
+        else:
+            ret, frame = cap.read()
+            if not ret:
+                print(f"[-] Lane {lane_id} ({direction}) connection lost. Reconnecting...")
+                cap.release()
+                cap = None
+                await asyncio.sleep(2)
+                continue
             
         if HAS_YOLO and model:
             try:
@@ -195,6 +214,12 @@ async def process_lane_camera(lane_id: int, direction: str, url: str = None):
                         
                         # Debug: Log EVERY detection in the terminal
                         if conf > 0.15: # Log everything above 15% confidence
+                            # Send to broadcast for UI display
+                            await manager.broadcast({
+                                "type": "debug",
+                                "lane": lane_id,
+                                "message": f"Found {cls_name} ({conf:.2f})"
+                            })
                             print(f"[YOLO DEBUG] Lane {lane_id}: Found {cls_name} with {conf:.2f} confidence")
                         
                         # Detect ambulances (class 0 in custom) OR standard vehicles (2,5,7 in COCO)
