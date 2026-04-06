@@ -38,7 +38,7 @@ except ImportError:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Start detection task only for North Road as per user request
-    asyncio.create_task(process_lane_camera(1, "North", f"http://{IP_1}:{PORT}/video"))
+    asyncio.create_task(process_lane_camera(1, "North", f"http://10.2.0.215:4747/video"))
     # East, South, West are currently turned off
     yield
 
@@ -223,8 +223,8 @@ async def process_lane_camera(lane_id: int, direction: str, url: str = None):
                             print(f"[YOLO DEBUG] Lane {lane_id}: Found {cls_name} with {conf:.2f} confidence")
                         
                         # Detect ambulances (class 0 in custom) OR standard vehicles (2,5,7 in COCO)
-                        # We use a lower threshold for emergency vehicles to be safer
-                        threshold = 0.20 if is_emergency else 0.45
+                        # High threshold as requested: 0.75+ for alerts
+                        threshold = 0.75 if is_emergency else 0.45
                         
                         if (is_emergency or cls in [2, 5, 7]) and conf > threshold:
                             obj_count += 1
