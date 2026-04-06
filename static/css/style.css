@@ -1,0 +1,298 @@
+:root {
+    --bg-dark: #0a0a0c;
+    --neon-blue: #00f3ff;
+    --neon-blue-dim: rgba(0, 243, 255, 0.2);
+    --alert-red: #ff003c;
+    --alert-blue: #0044ff;
+    --text-primary: #e0fbfc;
+    --text-muted: #8d99ae;
+    --border-dim: #1e1e24;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* Global Emergency Overlay - DEPRECATED for lane-specific alerts */
+#emergency-overlay {
+    display: none !important;
+}
+
+/* Lane Specific Alert Overlay */
+.lane-alert-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 0, 60, 0.9);
+    color: white;
+    padding: 15px 25px;
+    border: 2px solid white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    z-index: 100;
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 0 30px var(--alert-red);
+    white-space: nowrap;
+    animation: alertStrobe 0.5s infinite alternate;
+}
+
+@keyframes alertStrobe {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+}
+
+.lane-card.emergency .lane-alert-overlay {
+    display: block;
+}
+
+/* Main Layout */
+.command-center {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 20px;
+}
+
+.cc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--neon-blue);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.logo {
+    font-size: 2rem;
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px var(--neon-blue-dim);
+    letter-spacing: 2px;
+}
+
+.system-status {
+    color: var(--neon-blue);
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.system-status::before {
+    content: '';
+    display: inline-block;
+    width: 12px; height: 12px;
+    background-color: #00ff00;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00ff00;
+}
+
+/* grid and sidebar */
+.cc-main {
+    display: flex;
+    gap: 20px;
+    flex-grow: 1;
+    height: calc(100% - 70px);
+}
+
+/* 4-Grid Layout */
+.grid-container {
+    flex: 3;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+}
+
+.lane-card {
+    background: #121215;
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.lane-card.emergency {
+    border: 2px solid var(--alert-red);
+    animation: laneStrobe 0.8s infinite alternate;
+}
+
+@keyframes laneStrobe {
+    0% { box-shadow: 0 0 20px var(--alert-red); border-color: var(--alert-red); }
+    100% { box-shadow: 0 0 20px var(--alert-blue); border-color: var(--alert-blue); }
+}
+
+.lane-header {
+    background: #1a1a20;
+    padding: 10px 15px;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.priority-indicator {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #333;
+    color: #888;
+    border: 1px solid #444;
+}
+
+.lane-card.emergency .priority-indicator {
+    background: var(--alert-red);
+    color: white;
+    border-color: white;
+    box-shadow: 0 0 10px var(--alert-red);
+    animation: blink 0.5s infinite;
+}
+
+.lane-card.emergency .lane-header {
+    background: var(--alert-red);
+    color: white;
+    text-shadow: 0 0 5px white;
+}
+
+.feed-container {
+    flex-grow: 1;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+}
+
+.camera-canvas, .camera-stream {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.feed-overlay {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(255, 0, 0, 0.7);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+/* Incident Log Sidebar */
+.incident-log {
+    flex: 1;
+    background: rgba(18, 18, 21, 0.8);
+    border: 1px solid var(--neon-blue-dim);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.log-header {
+    background: rgba(0, 243, 255, 0.1);
+    border-bottom: 1px solid var(--neon-blue);
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.log-header h2 {
+    font-size: 1.2rem;
+    color: var(--neon-blue);
+    letter-spacing: 1px;
+}
+
+.pulse-dot {
+    width: 10px; height: 10px;
+    background-color: var(--neon-blue);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 var(--neon-blue); }
+    70% { box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 243, 255, 0); }
+}
+
+#log-list {
+    list-style: none;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.log-entry {
+    padding: 12px;
+    border-left: 3px solid var(--text-muted);
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    animation: slideIn 0.3s ease-out;
+}
+
+.log-entry.alert-entry {
+    border-left-color: var(--alert-red);
+    background: rgba(255, 0, 60, 0.05);
+}
+
+.timestamp {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.entry-msg {
+    font-size: 1rem;
+}
+
+.alert-entry .entry-msg {
+    color: var(--alert-red);
+    font-weight: bold;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-dim);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-blue-dim);
+}

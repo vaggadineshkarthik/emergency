@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+venv/
+ENV/
+
+# YOLO / Models
+*.pt
+!best.pt
+# We usually want to exclude large model files, but since the user is working with a specific one, 
+# I'll include best.pt if it's small, otherwise it's better to exclude.
+# Given it's 18MB, it's fine for GitHub (100MB limit).
+
+# Training Outputs
+runs/
+
+# Dataset (Usually too large for Git)
+Ambulance-Detection-1/
+
+# Logs & Temp
+*.log
+.DS_Store
+.idea/
+.vscode/
+static/js/app.js.map

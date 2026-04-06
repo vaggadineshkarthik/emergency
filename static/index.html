@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency-Priority Traffic Monitoring</title>
+    <!-- Share Tech Mono for the Command Center feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+    <!-- Global Emergency Overlay -->
+    <div id="emergency-overlay">
+        <h1>EMERGENCY ALERT: AMBULANCE DETECTED</h1>
+    </div>
+
+    <div class="command-center">
+        <!-- Header -->
+        <header class="cc-header">
+            <div class="logo">TRAFFIC // MONITOR</div>
+            <div class="system-status">SYS: ONLINE | AI: LOCAL YOLOv8</div>
+        </header>
+
+        <div class="cc-main">
+            <!-- Show only North Road in the dashboard as per user request -->
+            <div class="grid-container" style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+                <div class="lane-card" id="lane-1" style="max-width: 800px; width: 100%;">
+                    <div class="lane-header">
+                        <span>NORTH ROAD</span>
+                        <div class="priority-indicator" id="priority-1">NORMAL</div>
+                    </div>
+                    <div class="feed-container" style="aspect-ratio: 16/9;">
+                        <img class="camera-stream" src="/video_feed/1" alt="North Stream">
+                        <div class="feed-overlay">LIVE</div>
+                        <div class="lane-alert-overlay">EMERGENCY IN NORTH</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Incident Log Sidebar -->
+            <aside class="incident-log">
+                <div class="log-header">
+                    <h2>INCIDENT LOG</h2>
+                    <div class="pulse-dot"></div>
+                </div>
+                <ul id="log-list">
+                    <li class="log-entry normal-entry">
+                        <span class="timestamp">System Initialize</span>
+                        <span class="entry-msg">Awaiting Detections...</span>
+                    </li>
+                </ul>
+            </aside>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
