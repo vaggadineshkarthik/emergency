@@ -37,8 +37,10 @@ except ImportError:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Start detection task only for North Road as per user request
-    asyncio.create_task(process_lane_camera(1, "North", f"http://10.2.0.215:4747/video"))
+    # Start detection task for Lane 1 (North) using IP_1
+    # You can change to IP_2 if your other phone is the camera
+    camera_url = f"http://{IP_1}:{PORT}/video"
+    asyncio.create_task(process_lane_camera(1, "North", camera_url))
     # East, South, West are currently turned off
     yield
 
@@ -126,7 +128,8 @@ PORT = "4747"
 TEST_VIDEO_PATH = None 
 
 # SIMULATION MODE: If True, uses random images from test folder when camera fails
-SIMULATION_MODE = True
+# Set to False to use REAL camera
+SIMULATION_MODE = False
 
 # --- Background Task for Individual Lane Monitoring ---
 async def process_lane_camera(lane_id: int, direction: str, url: str = None):
