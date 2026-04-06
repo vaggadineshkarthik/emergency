@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    ws.onopen = () => {
+    socket.onopen = () => {
         console.log("WebSocket connected.");
         const li = document.createElement('li');
         li.className = 'log-entry normal-entry';
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         logList.insertBefore(li, logList.firstChild);
     };
 
-    ws.onclose = () => {
+    socket.onclose = () => {
         console.log("WebSocket disconnected.");
         const li = document.createElement('li');
         li.className = 'log-entry alert-entry';
