@@ -67,27 +67,56 @@ async def root():
     return FileResponse("static/index.html")
 
 async def get_frame_generator(lane_id: int):
+    print(f"[*] Starting MJPEG stream for Lane {lane_id}")
     while True:
         frame = lane_frames.get(lane_id)
         if frame is not None:
             ret, buffer = cv2.imencode('.jpg', frame)
             if ret:
+                # Proper MJPEG frame format
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+                       b'Content-Type: image/jpeg\r\n'
+                       b'Content-Length: ' + str(len(buffer)).encode() + b'\r\n\r\n' + 
+                       buffer.tobytes() + b'\r\n')
         else:
-            # Show a "No Signal" placeholder if camera is not connected
+            # Show a "No Signal" placeholder with timestamp
+            now = datetime.now().strftime("%H:%M:%S")
             placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
             cv2.putText(placeholder, f"LANE {lane_id} NO SIGNAL", (150, 240), 
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv2.putText(placeholder, f"CHECK IP: {IP_1} | {now}", (150, 280), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
             ret, buffer = cv2.imencode('.jpg', placeholder)
             if ret:
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
-        await asyncio.sleep(0.04)
+                       b'Content-Type: image/jpeg\r\n'
+                       b'Content-Length: ' + str(len(buffer)).encode() + b'\r\n\r\n' + 
+                       buffer.tobytes() + b'\r\n')
+        
+        # Adjust FPS to ~20 to reduce network load
+        await asyncio.sleep(0.05)
 
 @app.get("/video_feed/{lane_id}")
 async def video_feed(lane_id: int):
+    print(f"[HTTP] Video feed request for Lane {lane_id}")
     return StreamingResponse(get_frame_generator(lane_id), media_type="multipart/x-mixed-replace; boundary=frame")
+
+@app.get("/test_frame/{lane_id}")
+async def test_frame(lane_id: int):
+    """
+    Endpoint to test if a single static frame can be served.
+    """
+    frame = lane_frames.get(lane_id)
+    if frame is None:
+        frame = np.zeros((480, 640, 3), dtype=np.uint8)
+        cv2.putText(frame, "NO SIGNAL (STATIC)", (150, 240), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+    
+    ret, buffer = cv2.imencode('.jpg', frame)
+    if ret:
+        from fastapi.responses import Response
+        return Response(content=buffer.tobytes(), media_type="image/jpeg")
+    return {"error": "Failed to encode frame"}
 
 # --- WebSocket Manager for Real-Time UI Updates ---
 class ConnectionManager:
@@ -227,7 +256,7 @@ async def process_lane_camera(lane_id: int, direction: str, url: str = None):
                         
                         # Detect ambulances (class 0 in custom) OR standard vehicles (2,5,7 in COCO)
                         # High threshold as requested: 0.75+ for alerts
-                        threshold = 0.75 if is_emergency else 0.45
+                        threshold = 0.50 if is_emergency else 0.45
                         
                         if (is_emergency or cls in [2, 5, 7]) and conf > threshold:
                             obj_count += 1
